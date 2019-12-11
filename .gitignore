@@ -1,0 +1,16 @@
+docs/*
+
+.DS_Store
+__pycache__/
+
+.ipynb_checkpoints
+.~lock.*
+~$*
+
+data/*.csv
+*.csv
+
+data/*.json
+data/*.gz
+
+data/*.*
