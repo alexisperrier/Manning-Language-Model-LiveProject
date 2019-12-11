@@ -58,7 +58,8 @@ def count_ngrams(lines, n):
     return counts
 
 #
-counts = count_ngrams(df.tokens, 3)
+n  = 3
+counts = count_ngrams(df.tokens, n)
 
 def prefix_word_proba(counts):
     '''
@@ -74,6 +75,8 @@ def prefix_word_proba(counts):
             logprob[prefix][w] = np.log( (k / total) + 1)
 
     return prob, logprob
+
+prob, logprob = prefix_word_proba(counts)
 
 def get_possible_next_tokens(prefix):
     """
@@ -122,6 +125,57 @@ print(prefix)
 '''
 Calculate probability of a few sentences
 '''
+sent  = df.sample().tokens.values[0]
+
+def perplexity(sent):
+    pp = 1
+    lpp = 0
+    for gram in ngrams(sent.split(),
+                    n = n,
+                    pad_right=True,
+                    pad_left=True,
+                    left_pad_symbol = UNK,
+                    right_pad_symbol = EOS):
+        prefix = tuple(gram[:n-1])
+        word = gram[n-1]
+        p = prob[prefix][word]
+        lpp += np.log(p)
+        print(gram, prefix, word, p, np.log(p), lpp)
+    print()
+    print( - 1/n *  lpp)
+
+
+
+
+import nltk
+from nltk.lm.preprocessing import padded_everygram_pipeline
+from nltk.lm import MLE
+from nltk.lm import Vocabulary
+
+train_sentences = ['an apple', 'an orange']
+train_sentences = ['this is the day', 'this day is great','great you have the day']
+tokenized_text = [list(map(str.lower, nltk.tokenize.word_tokenize(sent))) for sent in train_sentences]
+
+n = 2
+train_data = [nltk.bigrams(t,  pad_right=True, pad_left=True, left_pad_symbol="<s>", right_pad_symbol="</s>") for t in tokenized_text]
+words = [word for sent in tokenized_text for word in sent]
+words.extend(["<s>", "</s>"])
+padded_vocab = Vocabulary(words)
+model = MLE(n)
+model.fit(train_data, padded_vocab)
+
+test_sentences = ['an apple', 'an ant']
+
+test_sentences = ['the day', 'this is','this day']
+tokenized_text = [list(map(str.lower, nltk.tokenize.word_tokenize(sent))) for sent in test_sentences]
+
+test_data = [nltk.bigrams(t,  pad_right=True, pad_left=True, left_pad_symbol="<s>", right_pad_symbol="</s>") for t in tokenized_text]
+for test in test_data:
+    print ("MLE Estimates:", [((ngram[-1], ngram[:-1]),model.score(ngram[-1], ngram[:-1])) for ngram in test])
+
+test_data = [nltk.bigrams(t,  pad_right=True, pad_left=True, left_pad_symbol="<s>", right_pad_symbol="</s>") for t in tokenized_text]
+for i, test in enumerate(test_data):
+  print("PP({0}):{1}".format(test_sentences[i], model.perplexity(test)))
 
 
 '''
@@ -130,7 +184,8 @@ https://stats.stackexchange.com/questions/129352/how-to-find-the-perplexity-of-a
 '''
 
 
-
+# perplexity of a sentence
+sent = ""
 
 
 
