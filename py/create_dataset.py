@@ -22,25 +22,26 @@ for file in files(path):
         df = pd.concat([df, temp])
         print(os.path.join(path, file), df.shape)
 
-titles = pd.DataFrame(df[['PostId','Title']].drop_duplicates().dropna().reset_index(drop = True))
-titles['answer_id'] = None
-titles['type'] = 'title'
-titles.rename(columns={'PostId': 'post_id', 'Title':'text'}, inplace = True)
+titles = df[['PostId','ParentId','CommentId','Title']].drop_duplicates(subset= ['PostId','Title']).dropna(subset = ['PostId','Title']).reset_index(drop = True).copy()
+titles['category'] = 'title'
+titles.rename(columns={'PostId': 'post_id','ParentId':'parent_id', 'CommentId': 'comment_id', 'Title':'text'}, inplace = True)
+titles['comment_id'] = None
+titles['parent_id'] = None
 
-bodies = pd.DataFrame(df[['PostId', 'Body']].drop_duplicates().dropna().reset_index(drop = True))
-bodies['answer_id'] = None
-bodies['type'] = 'question'
-bodies.rename(columns={'PostId': 'post_id', 'Body':'text'}, inplace = True)
+posts = df[['PostId','ParentId','CommentId', 'Body']].drop_duplicates(subset= ['PostId','ParentId','Body']).dropna(subset= ['PostId','Body']).reset_index(drop = True)
+posts['category'] = 'post'
+posts.rename(columns={'PostId': 'post_id','ParentId':'parent_id', 'CommentId': 'comment_id', 'Body':'text'}, inplace = True)
+posts['comment_id'] = None
+
+comments = df[['PostId','ParentId','CommentId', 'Text']].drop_duplicates(subset= ['PostId','CommentId','Text']).dropna(subset= ['PostId','CommentId', 'Text']).reset_index(drop = True)
+comments['category'] = 'comment'
+comments.rename(columns={'PostId': 'post_id','ParentId':'parent_id', 'CommentId': 'comment_id', 'Text':'text'}, inplace = True)
+comments['parent_id'] = None
 
 
-answers = pd.DataFrame(df[['PostId', 'CommentId', 'Text']].drop_duplicates().dropna().reset_index(drop = True))
-answers['type'] = 'answer'
-answers.rename(columns={'PostId': 'post_id', 'CommentId': 'answer_id'  ,'Text':'text'}, inplace = True)
+data = pd.concat([titles, posts,comments], sort=False)
 
-
-data = pd.concat([titles, bodies, answers], sort=False)
-
-data.to_csv('../data/stackexchange_800k.csv', quoting = csv.QUOTE_ALL, index = False)
+data.to_csv('../data/stackexchange_812k.csv', quoting = csv.QUOTE_ALL, index = False)
 
 # ------------------------------------------------------------------------------
 
